@@ -1,0 +1,63 @@
+import { ApprovalStatus, ChargeableFlag, UserRole, type NewMaterialRequest } from '@/types'
+
+export const newMaterials: NewMaterialRequest[] = [
+  {
+    id: 'NM-0001',
+    formNo: 'SH-32-CP-GEN-2026',
+    refNo: 'SH/PUR/NM/2020-21',
+    date: '2026-05-14',
+    supplierName: 'OSB Agencies Pvt Ltd',
+    supplierAddress: '14/1 UGF, Geeta Colony, Delhi 110031',
+    department: 'Histopathology',
+    requestedBy: 'Dr Ashvini Natu',
+    leadTime: '5-7 working days',
+    chargeable: ChargeableFlag.ChargesInPackage,
+    remark: 'Vendor: Mr Mangesh (98204 63497). These 3 antibodies are very rarely used, so changed from 7ml to 1ml.',
+    status: ApprovalStatus.CeoApproved,
+    lines: [
+      { itemName: 'CD68 KP 1-1ML Cat No 168M-97 Cell Marque', unit: 'Vial', packSize: '1', brand: 'Cell Marque', quantity: 1, quoteRate: 22000, negotiatedRate: 19800, mrp: 0, gstPercent: 5 },
+      { itemName: 'GFAP EP672Y 1ML Cat No 258R-17 Cell Marque', unit: 'Vial', packSize: '1', brand: 'Cell Marque', quantity: 1, quoteRate: 25600, negotiatedRate: 23040, mrp: 0, gstPercent: 5 },
+      { itemName: 'Vimentin V9 1ML Cat No 347M-17 Cell Marque', unit: 'Vial', packSize: '1', brand: 'Cell Marque', quantity: 1, quoteRate: 22000, negotiatedRate: 19800, mrp: 0, gstPercent: 5 },
+    ],
+    approvals: [
+      { role: UserRole.HOD, approverName: 'Dr. Ashvini Natu', status: ApprovalStatus.Approved, remark: 'Approved', actedOn: '2026-05-15' },
+      { role: UserRole.CEO, approverName: 'Dr. Huzaifa Shehabi', status: ApprovalStatus.Approved, remark: 'Approved', actedOn: '2026-05-16' },
+    ],
+  },
+  {
+    id: 'NM-0002',
+    formNo: 'SH-33-CP-GEN-2026',
+    refNo: 'SH/PUR/NM/2020-21',
+    date: '2026-05-25',
+    supplierName: 'Adhira Medvice Pvt Ltd',
+    supplierAddress: '1-17, Rizvi Park CHS, S.V Rd, Santacruz (West), Mumbai 400054',
+    department: 'Operation Theatre',
+    requestedBy: 'Dr Shanawaz Kazi',
+    leadTime: '1-2 days',
+    chargeable: ChargeableFlag.Chargeable,
+    remark: 'Vendor: Mr Priyank Patel (9987976412).',
+    status: ApprovalStatus.Rejected,
+    lines: [
+      { itemName: 'Opthal Knife 2.2MM Code 952222 Primeline', unit: 'pc', packSize: '10', brand: 'Primeline', quantity: 5, quoteRate: 85.71, negotiatedRate: 85.71, mrp: 112.5, gstPercent: 5 },
+    ],
+    approvals: [{ role: UserRole.HOD, approverName: 'Dr. Shanawaz Kazi', status: ApprovalStatus.Rejected, remark: 'Not Approved', actedOn: '2026-05-26' }],
+  },
+  {
+    id: 'NM-0003',
+    formNo: 'SH-34-CP-GEN-2026',
+    refNo: 'SH/PUR/NM/2020-21',
+    date: '2026-06-22',
+    supplierName: 'AIM Safety India',
+    supplierAddress: 'Andheri Industrial Estate, Mumbai',
+    department: 'General Stores',
+    requestedBy: 'Mr. Faizan Ali',
+    leadTime: '3-4 working days',
+    chargeable: ChargeableFlag.NonChargeable,
+    remark: 'New safety equipment line for staff.',
+    status: ApprovalStatus.Pending,
+    lines: [
+      { itemName: 'Safety Goggles Anti-Fog', unit: 'pcs', packSize: '1', brand: 'Karam', quantity: 100, quoteRate: 145, negotiatedRate: 130, mrp: 210, gstPercent: 18 },
+    ],
+    approvals: [{ role: UserRole.HOD, approverName: 'Mr. Faizan Ali', status: ApprovalStatus.Pending }],
+  },
+]

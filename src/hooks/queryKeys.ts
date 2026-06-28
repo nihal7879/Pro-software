@@ -1,0 +1,26 @@
+import type { UserRole } from '@/types'
+
+export const queryKeys = {
+  vendors: ['vendors'] as const,
+  vendor: (id: string) => ['vendors', id] as const,
+  items: ['items'] as const,
+  item: (id: string) => ['items', id] as const,
+  departments: ['departments'] as const,
+  stores: ['stores'] as const,
+  materialRequests: ['material-requests'] as const,
+  materialRequest: (id: string) => ['material-requests', id] as const,
+  rfqs: ['rfqs'] as const,
+  rfq: (id: string) => ['rfqs', id] as const,
+  comparisons: ['comparisons'] as const,
+  comparison: (id: string) => ['comparisons', id] as const,
+  newMaterials: ['new-materials'] as const,
+  newMaterial: (id: string) => ['new-materials', id] as const,
+  rateRevisions: ['rate-revisions'] as const,
+  rateRevision: (id: string) => ['rate-revisions', id] as const,
+  purchaseOrders: ['purchase-orders'] as const,
+  purchaseOrder: (id: string) => ['purchase-orders', id] as const,
+  notifications: ['notifications'] as const,
+  activities: ['activities'] as const,
+  auditLog: ['audit-log'] as const,
+  dashboard: (role: UserRole) => ['dashboard', role] as const,
+}
