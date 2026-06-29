@@ -14,11 +14,11 @@ import { FormSection } from '@/components/forms/FormSection'
 import { DatePicker } from '@/components/forms/DatePicker'
 import {
   departmentOptions,
-  itemOptionsForStore,
   priorityOptions,
   storeOptionsForDepartment,
   unitOptions,
 } from '@/lib/options'
+import { useItemStore } from '@/store/masters.store'
 import { materialRequestSchema, type MaterialRequestFormValues } from '@/lib/validations'
 import { formatCurrency } from '@/lib/format'
 import { paths } from '@/routes/paths'
@@ -50,10 +50,16 @@ export default function MaterialRequestCreate() {
   const total = lines?.reduce((s, l) => s + (Number(l.quantity) || 0) * (Number(l.estimatedRate) || 0), 0) ?? 0
 
   // Cascading dropdowns: department → store → items.
+  // Items are fetched live from the Item Master store (so newly added items appear).
+  const allItems = useItemStore((s) => s.items)
   const department = watch('department')
   const store = watch('store')
   const storeChoices = storeOptionsForDepartment(department ?? '')
-  const itemChoices = itemOptionsForStore(store ?? '')
+  const itemChoices = (store ? allItems.filter((i) => i.store === store && i.active) : allItems).map((i) => ({
+    label: i.name,
+    value: i.name,
+    description: i.code,
+  }))
 
   // When the department changes, auto-pick its store (or clear if ambiguous).
   useEffect(() => {

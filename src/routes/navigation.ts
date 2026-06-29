@@ -20,8 +20,6 @@ import {
 import { UserRole } from '@/types'
 import { paths } from './paths'
 
-const ALL: UserRole[] = [UserRole.Purchase, UserRole.HOD, UserRole.CEO]
-
 export interface NavItem {
   label: string
   to: string
@@ -57,14 +55,15 @@ export const navigation: NavSection[] = [
     ],
   },
   {
+    // Procurement tools are Purchase-only — HOD and CEO act via the Approvals section.
     title: 'Procurement',
     icon: ClipboardList,
     items: [
-      { label: 'Material Requests', to: paths.materialRequestList, icon: ClipboardList, roles: [UserRole.Purchase, UserRole.HOD] },
+      { label: 'Material Requests', to: paths.materialRequestList, icon: ClipboardList, roles: [UserRole.Purchase] },
       { label: 'RFQ', to: paths.rfqList, icon: FileStack, roles: [UserRole.Purchase] },
-      { label: 'Comparison', to: paths.comparisonList, icon: GitCompareArrows, roles: [UserRole.Purchase, UserRole.HOD] },
-      { label: 'New Material', to: paths.newMaterialList, icon: PackagePlus, roles: ALL },
-      { label: 'Rate Revision', to: paths.rateRevisionList, icon: ReceiptText, roles: ALL },
+      { label: 'Comparison', to: paths.comparisonList, icon: GitCompareArrows, roles: [UserRole.Purchase] },
+      { label: 'New Material', to: paths.newMaterialList, icon: PackagePlus, roles: [UserRole.Purchase] },
+      { label: 'Rate Revision', to: paths.rateRevisionList, icon: ReceiptText, roles: [UserRole.Purchase] },
       { label: 'Purchase Orders', to: paths.poList, icon: FileSpreadsheet, roles: [UserRole.Purchase, UserRole.CEO] },
     ],
   },

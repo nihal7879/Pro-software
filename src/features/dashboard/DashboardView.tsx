@@ -2,10 +2,12 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   ArrowRight,
+  ClipboardCheck,
   ClipboardList,
   FileSpreadsheet,
   GitCompareArrows,
   PackagePlus,
+  ReceiptText,
 } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { KpiCard } from '@/components/common/KpiCard'
@@ -26,12 +28,26 @@ import { formatRelative } from '@/lib/format'
 import { paths } from '@/routes/paths'
 import { UserRole } from '@/types'
 
-const quickActions = [
-  { label: 'New Material Request', to: paths.materialRequestCreate, icon: ClipboardList },
-  { label: 'Create RFQ', to: paths.rfqCreate, icon: PackagePlus },
-  { label: 'New Comparison', to: paths.comparisonWorksheet, icon: GitCompareArrows },
-  { label: 'Create PO', to: paths.poCreate, icon: FileSpreadsheet },
-]
+const quickActionsByRole: Record<UserRole, { label: string; to: string; icon: typeof ClipboardList }[]> = {
+  [UserRole.Purchase]: [
+    { label: 'New Material Request', to: paths.materialRequestCreate, icon: ClipboardList },
+    { label: 'Create RFQ', to: paths.rfqCreate, icon: PackagePlus },
+    { label: 'New Comparison', to: paths.comparisonWorksheet, icon: GitCompareArrows },
+    { label: 'Create PO', to: paths.poCreate, icon: FileSpreadsheet },
+  ],
+  [UserRole.HOD]: [
+    { label: 'Material Requests', to: paths.materialRequestApproval, icon: ClipboardCheck },
+    { label: 'Comparison Approvals', to: paths.comparisonApproval, icon: GitCompareArrows },
+    { label: 'New Material Review', to: paths.hodReview, icon: PackagePlus },
+    { label: 'Rate Revisions', to: paths.rateRevisionApproval, icon: ReceiptText },
+  ],
+  [UserRole.CEO]: [
+    { label: 'Comparison Approvals', to: paths.comparisonApproval, icon: GitCompareArrows },
+    { label: 'New Material Approvals', to: paths.ceoApproval, icon: PackagePlus },
+    { label: 'Rate Revisions', to: paths.rateRevisionApproval, icon: ReceiptText },
+    { label: 'PO Approvals', to: paths.poApproval, icon: FileSpreadsheet },
+  ],
+}
 
 interface DashboardViewProps {
   role: UserRole
@@ -42,6 +58,8 @@ interface DashboardViewProps {
 export function DashboardView({ role, title, description }: DashboardViewProps) {
   const { data, isLoading } = useDashboard(role)
   const { data: activities } = useActivities()
+  const quickActions = quickActionsByRole[role] ?? []
+  const isPurchase = role === UserRole.Purchase
 
   if (isLoading || !data) return <PageLoader />
 
@@ -52,9 +70,11 @@ export function DashboardView({ role, title, description }: DashboardViewProps) 
         description={description}
         breadcrumbs={[{ label: 'Home', to: paths.root }, { label: 'Dashboard' }]}
         actions={
-          <Link to={paths.materialRequestCreate} className={buttonVariants()}>
-            New Request <ArrowRight className="size-4" />
-          </Link>
+          isPurchase ? (
+            <Link to={paths.materialRequestCreate} className={buttonVariants()}>
+              New Request <ArrowRight className="size-4" />
+            </Link>
+          ) : undefined
         }
       />
 
@@ -85,7 +105,7 @@ export function DashboardView({ role, title, description }: DashboardViewProps) 
 
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle>{isPurchase ? 'Quick Actions' : 'Pending Approvals'}</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-3">
             {quickActions.map((action) => {

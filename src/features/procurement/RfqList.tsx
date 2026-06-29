@@ -92,7 +92,10 @@ export default function RfqList() {
       status: ApprovalStatus.Pending,
       remark: `Built from ${rfq.rfqNo}. Lowest total: ${recommendedVendor}.`,
       rows,
-      approvals: [{ role: UserRole.HOD, approverName: approverDept, status: ApprovalStatus.Pending }],
+      approvals: [
+        { role: UserRole.HOD, approverName: approverDept, status: ApprovalStatus.Pending },
+        { role: UserRole.CEO, approverName: 'Dr. Huzaifa Shehabi', status: ApprovalStatus.Pending },
+      ],
     }
     addComparison(comparison)
     toast.success('Comparison created', `${comparison.compNo} ready for approval.`)

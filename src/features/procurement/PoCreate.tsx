@@ -16,9 +16,13 @@ import { purchaseOrderSchema, type PurchaseOrderFormValues } from '@/lib/validat
 import { formatCurrency } from '@/lib/format'
 import { paths } from '@/routes/paths'
 import { toast } from '@/store/toast.store'
+import { usePoStore } from '@/store/po.store'
+import { vendors } from '@/mocks/vendors'
+import { ApprovalStatus, DocumentStatus, UserRole, type PurchaseOrder } from '@/types'
 
 export default function PoCreate() {
   const navigate = useNavigate()
+  const addPo = usePoStore((s) => s.add)
   const {
     register,
     control,
@@ -40,8 +44,34 @@ export default function PoCreate() {
   const tax = lines?.reduce((s, l) => s + (Number(l.quantity) || 0) * (Number(l.rate) || 0) * ((Number(l.gstPercent) || 0) / 100), 0) ?? 0
 
   const onSubmit = async (values: PurchaseOrderFormValues) => {
-    await new Promise((r) => setTimeout(r, 600))
-    toast.success('Purchase Order created', `Sent for CEO approval (${values.lines.length} item(s)).`)
+    await new Promise((r) => setTimeout(r, 400))
+    const poLines = values.lines.map((l) => {
+      const amount = l.quantity * l.rate * (1 + l.gstPercent / 100)
+      return { itemCode: '', itemName: l.itemName, unit: l.unit, quantity: l.quantity, rate: l.rate, gstPercent: l.gstPercent, amount }
+    })
+    const sub = poLines.reduce((s, l) => s + l.quantity * l.rate, 0)
+    const taxTotal = poLines.reduce((s, l) => s + l.quantity * l.rate * (l.gstPercent / 100), 0)
+    const vendor = vendors.find((v) => v.id === values.vendorId)
+    const po: PurchaseOrder = {
+      id: `PO-${Date.now()}`,
+      poNo: `SH-PO-NEW-${Date.now().toString().slice(-4)}`,
+      date: values.date,
+      vendorId: values.vendorId,
+      vendorName: vendor?.name ?? 'Vendor',
+      store: values.store,
+      department: values.department,
+      status: ApprovalStatus.Pending,
+      deliveryStatus: DocumentStatus.Open,
+      expectedDelivery: values.expectedDelivery,
+      lines: poLines,
+      subTotal: sub,
+      taxTotal,
+      grandTotal: sub + taxTotal,
+      terms: values.terms,
+      approvals: [{ role: UserRole.CEO, approverName: 'Dr. Huzaifa Shehabi', status: ApprovalStatus.Pending }],
+    }
+    addPo(po)
+    toast.success('Purchase Order created', `${po.poNo} sent for CEO approval.`)
     navigate(paths.poList)
   }
 

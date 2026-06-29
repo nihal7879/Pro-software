@@ -10,6 +10,7 @@ import {
 } from '@/store/masters.store'
 import { useRfqStore } from '@/store/rfq.store'
 import { useComparisonStore } from '@/store/comparison.store'
+import { usePoStore } from '@/store/po.store'
 import { queryKeys } from './queryKeys'
 import type { UserRole } from '@/types'
 
@@ -95,14 +96,13 @@ export const useRateRevision = (id: string) =>
 
 export const usePurchaseOrders = () => {
   const scope = useDepartmentScope()
-  return useQuery({
-    queryKey: queryKeys.purchaseOrders,
-    queryFn: procurementService.getPurchaseOrders,
-    select: (rows) => scope(rows, (r) => r.department),
-  })
+  const items = usePoStore((s) => s.items)
+  return { data: scope(items, (r) => r.department), isLoading: false }
 }
-export const usePurchaseOrder = (id: string) =>
-  useQuery({ queryKey: queryKeys.purchaseOrder(id), queryFn: () => procurementService.getPurchaseOrder(id) })
+export const usePurchaseOrder = (id: string) => {
+  const items = usePoStore((s) => s.items)
+  return { data: items.find((p) => p.id === id), isLoading: false }
+}
 
 export const useNotifications = () =>
   useQuery({ queryKey: queryKeys.notifications, queryFn: procurementService.getNotifications })

@@ -1,23 +1,20 @@
-import { createCrudStore } from './createCrudStore'
-import { comparisons } from '@/mocks/comparisons'
-import { ApprovalStatus, UserRole, type ApprovalStep, type Comparison } from '@/types'
-
-export const useComparisonStore = createCrudStore<Comparison>('procura.comparisons', comparisons)
+import { ApprovalStatus, UserRole, type ApprovalStep } from '@/types'
 
 /**
- * Computes the status/approval patch for a comparison decision.
- * Two-step: HOD approves first (→ HOD Approved), then CEO (→ Approved).
+ * Applies an approve/reject decision to a record's approval trail and returns
+ * the new status + approvals. Works for single-step (CEO-only) and two-step
+ * (HOD → CEO) documents alike.
  */
-export function decideComparison(
-  c: Comparison,
+export function applyDecision<T extends { status: ApprovalStatus; approvals: ApprovalStep[] }>(
+  record: T,
   action: 'approve' | 'reject',
   role: UserRole,
   approverName: string,
   remark?: string,
-): Partial<Comparison> {
+): Pick<T, 'status' | 'approvals'> {
   const today = new Date().toISOString().slice(0, 10)
   const rejected = action === 'reject'
-  const steps: ApprovalStep[] = c.approvals.map((s) => ({ ...s }))
+  const steps: ApprovalStep[] = record.approvals.map((s) => ({ ...s }))
   const newStep: ApprovalStep = {
     role,
     approverName,
@@ -29,7 +26,7 @@ export function decideComparison(
   if (idx >= 0) steps[idx] = newStep
   else steps.push(newStep)
 
-  let status = c.status
+  let status = record.status
   if (rejected) {
     status = ApprovalStatus.Rejected
   } else {
@@ -38,5 +35,5 @@ export function decideComparison(
     if (ceo?.status === ApprovalStatus.Approved) status = ApprovalStatus.Approved
     else if (hod?.status === ApprovalStatus.Approved) status = ApprovalStatus.HodApproved
   }
-  return { approvals: steps, status }
+  return { status, approvals: steps } as Pick<T, 'status' | 'approvals'>
 }

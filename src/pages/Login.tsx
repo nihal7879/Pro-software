@@ -156,6 +156,19 @@ export default function Login() {
               Login
             </Button>
           </form>
+
+          <button
+            type="button"
+            onClick={() => {
+              Object.keys(localStorage)
+                .filter((k) => k.startsWith('procura.'))
+                .forEach((k) => localStorage.removeItem(k))
+              window.location.reload()
+            }}
+            className="mt-5 w-full text-center text-xs text-white/40 transition-colors hover:text-white/70"
+          >
+            Reset demo data
+          </button>
         </motion.div>
       </div>
     </div>

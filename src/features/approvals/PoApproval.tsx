@@ -1,9 +1,21 @@
 import { usePurchaseOrders } from '@/hooks/useProcurement'
 import { formatCurrency, formatDate } from '@/lib/format'
+import { usePoStore } from '@/store/po.store'
+import { useAuthStore } from '@/store/auth.store'
+import { applyDecision } from '@/lib/approval'
+import { ApprovalStatus } from '@/types'
 import { ApprovalQueue, type ApprovalRecord } from './ApprovalQueue'
 
 export default function PoApproval() {
   const { data, isLoading } = usePurchaseOrders()
+  const update = usePoStore((s) => s.update)
+  const role = useAuthStore((s) => s.role)
+  const approverName = useAuthStore((s) => s.currentUser?.name ?? 'CEO')
+
+  const decide = (id: string, action: 'approve' | 'reject', remark: string) => {
+    const record = data?.find((p) => p.id === id)
+    if (record && role) update(id, applyDecision(record, action, role, approverName, remark))
+  }
 
   const records: ApprovalRecord[] = (data ?? []).map((p) => ({
     id: p.id,
@@ -62,6 +74,9 @@ export default function PoApproval() {
       isLoading={isLoading}
       referenceLabel="PO No"
       primaryLabel="Vendor"
+      openStatuses={[ApprovalStatus.Pending]}
+      onApprove={(id, remark) => decide(id, 'approve', remark)}
+      onReject={(id, remark) => decide(id, 'reject', remark)}
     />
   )
 }
