@@ -1,50 +1,106 @@
 import { useQuery } from '@tanstack/react-query'
 import { procurementService } from '@/services/procurement.service'
+import { useDepartmentScope } from '@/lib/scope'
+import { useMaterialRequestStore } from '@/store/materialRequest.store'
+import {
+  useDepartmentStore,
+  useItemStore,
+  useStoreStore,
+  useVendorStore,
+} from '@/store/masters.store'
+import { useRfqStore } from '@/store/rfq.store'
+import { useComparisonStore } from '@/store/comparison.store'
 import { queryKeys } from './queryKeys'
 import type { UserRole } from '@/types'
 
-export const useVendors = () =>
-  useQuery({ queryKey: queryKeys.vendors, queryFn: procurementService.getVendors })
-export const useVendor = (id: string) =>
-  useQuery({ queryKey: queryKeys.vendor(id), queryFn: () => procurementService.getVendor(id) })
+// Master data is served from live client stores so view/edit/delete persist.
+export const useVendors = () => {
+  const items = useVendorStore((s) => s.items)
+  return { data: items, isLoading: false }
+}
+export const useVendor = (id: string) => {
+  const items = useVendorStore((s) => s.items)
+  return { data: items.find((v) => v.id === id), isLoading: false }
+}
 
-export const useItems = () =>
-  useQuery({ queryKey: queryKeys.items, queryFn: procurementService.getItems })
-export const useItem = (id: string) =>
-  useQuery({ queryKey: queryKeys.item(id), queryFn: () => procurementService.getItem(id) })
+export const useItems = () => {
+  const items = useItemStore((s) => s.items)
+  return { data: items, isLoading: false }
+}
+export const useItem = (id: string) => {
+  const items = useItemStore((s) => s.items)
+  return { data: items.find((i) => i.id === id), isLoading: false }
+}
 
-export const useDepartments = () =>
-  useQuery({ queryKey: queryKeys.departments, queryFn: procurementService.getDepartments })
-export const useStores = () =>
-  useQuery({ queryKey: queryKeys.stores, queryFn: procurementService.getStores })
+export const useDepartments = () => {
+  const items = useDepartmentStore((s) => s.items)
+  return { data: items, isLoading: false }
+}
+export const useStores = () => {
+  const items = useStoreStore((s) => s.items)
+  return { data: items, isLoading: false }
+}
 
-export const useMaterialRequests = () =>
-  useQuery({ queryKey: queryKeys.materialRequests, queryFn: procurementService.getMaterialRequests })
-export const useMaterialRequest = (id: string) =>
-  useQuery({ queryKey: queryKeys.materialRequest(id), queryFn: () => procurementService.getMaterialRequest(id) })
+// Material Requests are served from a live client store so the demo flow
+// (create → HOD approve) actually mutates and persists.
+export const useMaterialRequests = () => {
+  const scope = useDepartmentScope()
+  const requests = useMaterialRequestStore((s) => s.requests)
+  return { data: scope(requests, (r) => r.department), isLoading: false }
+}
+export const useMaterialRequest = (id: string) => {
+  const requests = useMaterialRequestStore((s) => s.requests)
+  return { data: requests.find((r) => r.id === id), isLoading: false }
+}
 
-export const useRfqs = () =>
-  useQuery({ queryKey: queryKeys.rfqs, queryFn: procurementService.getRfqs })
-export const useRfq = (id: string) =>
-  useQuery({ queryKey: queryKeys.rfq(id), queryFn: () => procurementService.getRfq(id) })
+export const useRfqs = () => {
+  const items = useRfqStore((s) => s.items)
+  return { data: items, isLoading: false }
+}
+export const useRfq = (id: string) => {
+  const items = useRfqStore((s) => s.items)
+  return { data: items.find((r) => r.id === id), isLoading: false }
+}
 
-export const useComparisons = () =>
-  useQuery({ queryKey: queryKeys.comparisons, queryFn: procurementService.getComparisons })
-export const useComparison = (id: string) =>
-  useQuery({ queryKey: queryKeys.comparison(id), queryFn: () => procurementService.getComparison(id) })
+export const useComparisons = () => {
+  const items = useComparisonStore((s) => s.items)
+  return { data: items, isLoading: false }
+}
+export const useComparison = (id: string) => {
+  const items = useComparisonStore((s) => s.items)
+  return { data: items.find((c) => c.id === id), isLoading: false }
+}
 
-export const useNewMaterials = () =>
-  useQuery({ queryKey: queryKeys.newMaterials, queryFn: procurementService.getNewMaterials })
+export const useNewMaterials = () => {
+  const scope = useDepartmentScope()
+  return useQuery({
+    queryKey: queryKeys.newMaterials,
+    queryFn: procurementService.getNewMaterials,
+    select: (rows) => scope(rows, (r) => r.department),
+  })
+}
 export const useNewMaterial = (id: string) =>
   useQuery({ queryKey: queryKeys.newMaterial(id), queryFn: () => procurementService.getNewMaterial(id) })
 
-export const useRateRevisions = () =>
-  useQuery({ queryKey: queryKeys.rateRevisions, queryFn: procurementService.getRateRevisions })
+export const useRateRevisions = () => {
+  const scope = useDepartmentScope()
+  return useQuery({
+    queryKey: queryKeys.rateRevisions,
+    queryFn: procurementService.getRateRevisions,
+    select: (rows) => scope(rows, (r) => r.userDepartment),
+  })
+}
 export const useRateRevision = (id: string) =>
   useQuery({ queryKey: queryKeys.rateRevision(id), queryFn: () => procurementService.getRateRevision(id) })
 
-export const usePurchaseOrders = () =>
-  useQuery({ queryKey: queryKeys.purchaseOrders, queryFn: procurementService.getPurchaseOrders })
+export const usePurchaseOrders = () => {
+  const scope = useDepartmentScope()
+  return useQuery({
+    queryKey: queryKeys.purchaseOrders,
+    queryFn: procurementService.getPurchaseOrders,
+    select: (rows) => scope(rows, (r) => r.department),
+  })
+}
 export const usePurchaseOrder = (id: string) =>
   useQuery({ queryKey: queryKeys.purchaseOrder(id), queryFn: () => procurementService.getPurchaseOrder(id) })
 

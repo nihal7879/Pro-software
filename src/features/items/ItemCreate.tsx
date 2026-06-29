@@ -13,9 +13,12 @@ import { categoryOptions, storeOptions, unitOptions } from '@/lib/options'
 import { itemSchema, type ItemFormValues } from '@/lib/validations'
 import { paths } from '@/routes/paths'
 import { toast } from '@/store/toast.store'
+import { useItemStore } from '@/store/masters.store'
+import type { Item } from '@/types'
 
 export default function ItemCreate() {
   const navigate = useNavigate()
+  const addItem = useItemStore((s) => s.add)
   const {
     register,
     handleSubmit,
@@ -26,7 +29,23 @@ export default function ItemCreate() {
   })
 
   const onSubmit = async (values: ItemFormValues) => {
-    await new Promise((r) => setTimeout(r, 600))
+    await new Promise((r) => setTimeout(r, 400))
+    const item: Item = {
+      id: `ITM-${Date.now()}`,
+      code: values.code,
+      name: values.name,
+      category: values.category,
+      unit: values.unit,
+      brand: values.brand,
+      store: values.store,
+      currentRate: values.currentRate,
+      mrp: values.mrp,
+      gstPercent: values.gstPercent,
+      annualConsumption: values.annualConsumption,
+      reorderLevel: values.reorderLevel,
+      active: true,
+    }
+    addItem(item)
     toast.success('Item created', `${values.name} added to the catalogue.`)
     navigate(paths.itemMaster)
   }

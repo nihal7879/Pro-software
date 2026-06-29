@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Eye, FileStack, Plus } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -14,12 +14,46 @@ import { useMaterialRequests } from '@/hooks/useProcurement'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { paths } from '@/routes/paths'
 import { toast } from '@/store/toast.store'
-import { ApprovalStatus, type MaterialRequest } from '@/types'
+import { useRfqStore } from '@/store/rfq.store'
+import { useAuthStore } from '@/store/auth.store'
+import { vendors } from '@/mocks/vendors'
+import { DocumentStatus, ApprovalStatus, type MaterialRequest, type Rfq } from '@/types'
 
 export default function MaterialRequestList() {
+  const navigate = useNavigate()
   const { data, isLoading } = useMaterialRequests()
+  const addRfq = useRfqStore((s) => s.add)
+  const createdBy = useAuthStore((s) => s.currentUser?.name ?? 'Purchase')
   const [status, setStatus] = useState('all')
   const [selected, setSelected] = useState<MaterialRequest | null>(null)
+
+  const convertToRfq = (mr: MaterialRequest) => {
+    const today = new Date()
+    const due = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+    // Seed three candidate vendors (awaiting quotes) so Purchase can record replies.
+    const candidates = vendors.slice(0, 3)
+    const rfq: Rfq = {
+      id: `RFQ-${Date.now()}`,
+      // Derive the RFQ number from the source MR so they stay tied (SH-MR-KIT-5139 → SH-RFQ-KIT-5139).
+      rfqNo: mr.mrNo.replace('-MR-', '-RFQ-'),
+      date: today.toISOString().slice(0, 10),
+      store: mr.store,
+      status: DocumentStatus.Open,
+      dueDate: due.toISOString().slice(0, 10),
+      vendorIds: candidates.map((v) => v.id),
+      createdBy,
+      lines: mr.lines.map((l) => ({
+        itemCode: l.itemCode,
+        itemName: l.itemName,
+        unit: l.unit,
+        quantity: l.quantity,
+        quotes: candidates.map((v) => ({ vendorId: v.id, vendorName: v.name, rate: 0, responded: false })),
+      })),
+    }
+    addRfq(rfq)
+    toast.success('RFQ created', `${rfq.rfqNo} raised from ${mr.mrNo}.`)
+    navigate(paths.rfqList)
+  }
 
   const filtered = useMemo(
     () => (data ?? []).filter((m) => status === 'all' || m.status === status),
@@ -42,14 +76,28 @@ export default function MaterialRequestList() {
       {
         id: 'actions',
         header: '',
-        cell: ({ row }) => (
-          <RowActions
-            actions={[
-              { label: 'View details', icon: <Eye />, onClick: () => setSelected(row.original) },
-              { label: 'Convert to RFQ', icon: <FileStack />, onClick: () => toast.info('RFQ', `From ${row.original.mrNo}`) },
-            ]}
-          />
-        ),
+        cell: ({ row }) => {
+          // RFQ can only be raised once the HOD (and beyond) has approved the request.
+          const canConvert =
+            row.original.status === ApprovalStatus.HodApproved ||
+            row.original.status === ApprovalStatus.Approved
+          return (
+            <RowActions
+              actions={[
+                { label: 'View details', icon: <Eye />, onClick: () => setSelected(row.original) },
+                ...(canConvert
+                  ? [
+                      {
+                        label: 'Convert to RFQ',
+                        icon: <FileStack />,
+                        onClick: () => convertToRfq(row.original),
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+          )
+        },
       },
     ],
     [],

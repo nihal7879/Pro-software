@@ -15,6 +15,8 @@ import { toast } from '@/store/toast.store'
 export default function Profile() {
   const { currentUser } = useAuthStore()
 
+  if (!currentUser) return null
+
   return (
     <div>
       <PageHeader

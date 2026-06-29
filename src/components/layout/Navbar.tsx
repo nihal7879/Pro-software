@@ -2,24 +2,31 @@ import { useNavigate } from 'react-router-dom'
 import { Bell, LogOut, Menu, Moon, Search, Settings, Sun, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
-import { Dropdown, DropdownItem, DropdownLabel, DropdownSeparator } from '@/components/ui/dropdown'
+import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/dropdown'
 import { Badge } from '@/components/ui/badge'
 import { useUiStore } from '@/store/ui.store'
 import { useThemeStore } from '@/store/theme.store'
 import { useAuthStore } from '@/store/auth.store'
 import { useNotifications } from '@/hooks/useProcurement'
-import { roleLabels, users } from '@/mocks/users'
+import { roleLabels } from '@/mocks/users'
 import { paths } from '@/routes/paths'
-import { UserRole } from '@/types'
-import { cn } from '@/lib/utils'
+import { toast } from '@/store/toast.store'
 
 export function Navbar() {
   const navigate = useNavigate()
   const { setMobileSidebar, setNotifications, setSearch } = useUiStore()
   const { mode, toggle } = useThemeStore()
-  const { currentUser, role, switchRole } = useAuthStore()
+  const { currentUser, role, logout } = useAuthStore()
   const { data: notifications } = useNotifications()
   const unread = notifications?.filter((n) => !n.read).length ?? 0
+
+  if (!currentUser || !role) return null
+
+  const signOut = () => {
+    logout()
+    toast.info('Signed out', 'You have been logged out.')
+    navigate(paths.login, { replace: true })
+  }
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-xl lg:px-6">
@@ -45,44 +52,10 @@ export function Navbar() {
       </button>
 
       <div className="ml-auto flex items-center gap-1.5">
-        {/* Role switcher */}
-        <Dropdown
-          trigger={
-            <Button variant="outline" size="sm" className="gap-2">
-              <span className="hidden sm:inline">Viewing as</span>
-              <Badge tone="info">{roleLabels[role]}</Badge>
-            </Button>
-          }
-        >
-          {(close) => (
-            <>
-              <DropdownLabel>Switch role</DropdownLabel>
-              {users.map((u) => (
-                <DropdownItem
-                  key={u.role}
-                  className={cn(role === u.role && 'bg-accent/60')}
-                  onClick={() => {
-                    switchRole(u.role)
-                    close()
-                    navigate(
-                      u.role === UserRole.CEO
-                        ? paths.dashboardCeo
-                        : u.role === UserRole.HOD
-                          ? paths.dashboardHod
-                          : paths.dashboardPurchase,
-                    )
-                  }}
-                >
-                  <Avatar name={u.name} size="sm" />
-                  <span className="flex flex-col">
-                    <span className="font-medium">{roleLabels[u.role]}</span>
-                    <span className="text-xs text-muted-foreground">{u.designation}</span>
-                  </span>
-                </DropdownItem>
-              ))}
-            </>
-          )}
-        </Dropdown>
+        <span className="hidden items-center gap-1.5 rounded-lg border border-input bg-muted/40 px-2.5 py-1.5 text-xs font-medium sm:inline-flex">
+          <span className="text-muted-foreground">Role</span>
+          <Badge tone="info">{roleLabels[role]}</Badge>
+        </span>
 
         <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
           {mode === 'dark' ? <Sun /> : <Moon />}
@@ -134,7 +107,13 @@ export function Navbar() {
                 Settings
               </DropdownItem>
               <DropdownSeparator />
-              <DropdownItem className="text-destructive hover:bg-destructive/10" onClick={close}>
+              <DropdownItem
+                className="text-destructive hover:bg-destructive/10"
+                onClick={() => {
+                  close()
+                  signOut()
+                }}
+              >
                 <LogOut />
                 Sign out
               </DropdownItem>

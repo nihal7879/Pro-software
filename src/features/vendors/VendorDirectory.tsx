@@ -9,16 +9,40 @@ import { FilterPanel } from '@/components/common/FilterPanel'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
 import { VendorStatusBadge } from '@/components/common/StatusBadge'
+import { EditModal, ConfirmDialog, type FieldConfig } from '@/components/common/CrudDialogs'
 import { useVendors } from '@/hooks/useProcurement'
+import { useVendorStore } from '@/store/masters.store'
 import { formatCurrency } from '@/lib/format'
 import { paths } from '@/routes/paths'
 import { toast } from '@/store/toast.store'
 import { VendorStatus, type Vendor } from '@/types'
 
+const vendorStatusOptions = [
+  { label: 'Active', value: VendorStatus.Active },
+  { label: 'Pending', value: VendorStatus.Pending },
+  { label: 'Inactive', value: VendorStatus.Inactive },
+  { label: 'Blacklisted', value: VendorStatus.Blacklisted },
+]
+
+const editFields: FieldConfig[] = [
+  { key: 'name', label: 'Vendor Name', full: true },
+  { key: 'contactPerson', label: 'Contact Person' },
+  { key: 'email', label: 'Email' },
+  { key: 'phone', label: 'Phone' },
+  { key: 'city', label: 'City' },
+  { key: 'paymentTerms', label: 'Payment Terms' },
+  { key: 'leadTimeDays', label: 'Lead Time (days)', type: 'number' },
+  { key: 'rating', label: 'Rating', type: 'number' },
+  { key: 'status', label: 'Status', type: 'select', options: vendorStatusOptions },
+]
+
 export default function VendorDirectory() {
   const navigate = useNavigate()
   const { data, isLoading } = useVendors()
+  const { update, remove } = useVendorStore()
   const [status, setStatus] = useState('all')
+  const [edit, setEdit] = useState<Vendor | null>(null)
+  const [del, setDel] = useState<Vendor | null>(null)
 
   const filtered = useMemo(
     () => (data ?? []).filter((v) => status === 'all' || v.status === status),
@@ -74,13 +98,13 @@ export default function VendorDirectory() {
           <RowActions
             actions={[
               { label: 'View profile', icon: <Eye />, onClick: () => navigate(paths.vendorProfile(row.original.id)) },
-              { label: 'Edit', icon: <Pencil />, onClick: () => toast.info('Edit vendor', row.original.name) },
+              { label: 'Edit', icon: <Pencil />, onClick: () => setEdit(row.original) },
               {
                 label: 'Delete',
                 icon: <Trash2 />,
                 destructive: true,
                 separatorBefore: true,
-                onClick: () => toast.error('Vendor removed', row.original.name),
+                onClick: () => setDel(row.original),
               },
             ]}
           />
@@ -128,6 +152,36 @@ export default function VendorDirectory() {
             ]}
           />
         }
+      />
+
+      {edit && (
+        <EditModal
+          key={edit.id}
+          open
+          onClose={() => setEdit(null)}
+          title={`Edit · ${edit.name}`}
+          fields={editFields}
+          initial={edit as unknown as Record<string, unknown>}
+          onSave={(values) => {
+            update(edit.id, values as Partial<Vendor>)
+            toast.success('Vendor saved', String(values.name))
+            setEdit(null)
+          }}
+        />
+      )}
+
+      <ConfirmDialog
+        open={del !== null}
+        onClose={() => setDel(null)}
+        title="Delete vendor"
+        message={<>Remove <b>{del?.name}</b> from the directory? This cannot be undone.</>}
+        onConfirm={() => {
+          if (del) {
+            remove(del.id)
+            toast.error('Vendor deleted', del.name)
+          }
+          setDel(null)
+        }}
       />
     </div>
   )

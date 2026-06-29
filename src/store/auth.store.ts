@@ -4,9 +4,12 @@ import { UserRole, type User } from '@/types'
 import { users } from '@/mocks/users'
 
 interface AuthState {
-  currentUser: User
-  role: UserRole
-  switchRole: (role: UserRole) => void
+  currentUser: User | null
+  role: UserRole | null
+  isAuthenticated: boolean
+  login: (role: UserRole) => void
+  loginAs: (userId: string) => void
+  logout: () => void
 }
 
 function userForRole(role: UserRole): User {
@@ -16,9 +19,15 @@ function userForRole(role: UserRole): User {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      currentUser: userForRole(UserRole.Purchase),
-      role: UserRole.Purchase,
-      switchRole: (role) => set({ role, currentUser: userForRole(role) }),
+      currentUser: null,
+      role: null,
+      isAuthenticated: false,
+      login: (role) => set({ role, currentUser: userForRole(role), isAuthenticated: true }),
+      loginAs: (userId) => {
+        const user = users.find((u) => u.id === userId) ?? users[0]
+        set({ role: user.role, currentUser: user, isAuthenticated: true })
+      },
+      logout: () => set({ role: null, currentUser: null, isAuthenticated: false }),
     }),
     { name: 'procura.auth' },
   ),

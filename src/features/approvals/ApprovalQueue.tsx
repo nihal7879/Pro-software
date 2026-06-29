@@ -30,6 +30,10 @@ interface ApprovalQueueProps {
   isLoading?: boolean
   referenceLabel?: string
   primaryLabel?: string
+  /** Statuses that still need action (show Approve/Reject). Defaults to Pending + HOD Approved. */
+  openStatuses?: ApprovalStatus[]
+  onApprove?: (id: string, remark: string) => void
+  onReject?: (id: string, remark: string) => void
 }
 
 export function ApprovalQueue({
@@ -40,12 +44,13 @@ export function ApprovalQueue({
   isLoading,
   referenceLabel = 'Reference',
   primaryLabel = 'Subject',
+  openStatuses = [ApprovalStatus.Pending, ApprovalStatus.HodApproved],
+  onApprove,
+  onReject,
 }: ApprovalQueueProps) {
   const [selected, setSelected] = useState<ApprovalRecord | null>(null)
 
-  const pending = records.filter(
-    (r) => r.status === ApprovalStatus.Pending || r.status === ApprovalStatus.HodApproved,
-  ).length
+  const pending = records.filter((r) => openStatuses.includes(r.status)).length
 
   const columns = useMemo<ColumnDef<ApprovalRecord>[]>(
     () => [
@@ -69,7 +74,7 @@ export function ApprovalQueue({
     [referenceLabel, primaryLabel],
   )
 
-  const isOpen = selected?.status === ApprovalStatus.Pending || selected?.status === ApprovalStatus.HodApproved
+  const isOpen = selected ? openStatuses.includes(selected.status) : false
 
   return (
     <div>
@@ -93,7 +98,11 @@ export function ApprovalQueue({
         size="lg"
         footer={
           isOpen && selected ? (
-            <ApprovalActions reference={selected.reference} onApprove={() => setSelected(null)} onReject={() => setSelected(null)} />
+            <ApprovalActions
+              reference={selected.reference}
+              onApprove={(remark) => { onApprove?.(selected.id, remark); setSelected(null) }}
+              onReject={(remark) => { onReject?.(selected.id, remark); setSelected(null) }}
+            />
           ) : undefined
         }
       >

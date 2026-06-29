@@ -16,6 +16,32 @@ export const itemOptions: SelectOption[] = items.map((i) => ({
   description: i.code,
 }))
 
+/** Which store serves each department — used for cascading dropdowns. */
+export const departmentStoreMap: Record<string, string> = {
+  Histopathology: 'Lab Store',
+  'Operation Theatre': 'Surgical Store',
+  Kitchen: 'Kitchen Store',
+  'General Stores': 'General Store',
+  Laboratory: 'Lab Store',
+  Pharmacy: 'Pharmacy Store',
+  Radiology: 'General Store',
+  Maintenance: 'General Store',
+}
+
+/** Stores available for a department (falls back to all stores if unmapped). */
+export function storeOptionsForDepartment(department: string): SelectOption[] {
+  const store = departmentStoreMap[department]
+  return store ? storeOptions.filter((o) => o.value === store) : storeOptions
+}
+
+/** Items stocked in a given store (falls back to all items if no store chosen). */
+export function itemOptionsForStore(store: string): SelectOption[] {
+  if (!store) return itemOptions
+  return items
+    .filter((i) => i.store === store)
+    .map((i) => ({ label: i.name, value: i.name, description: i.code }))
+}
+
 export const categoryOptions: SelectOption[] = Object.values(SpendCategory).map((c) => ({
   label: c
     .toLowerCase()

@@ -28,6 +28,42 @@ export const users: User[] = [
     designation: 'Chief Executive Officer',
     phone: '+91 98200 77889',
   },
+  {
+    id: 'USR-0004',
+    name: 'Dr. Shanawaz Kazi',
+    email: 'shanawaz.kazi@saifeehospital.in',
+    role: UserRole.HOD,
+    department: 'Operation Theatre',
+    designation: 'Head of Department',
+    phone: '+91 98200 22334',
+  },
+  {
+    id: 'USR-0005',
+    name: 'Mr. Imran Shaikh',
+    email: 'imran.shaikh@saifeehospital.in',
+    role: UserRole.HOD,
+    department: 'Kitchen',
+    designation: 'Head of Department',
+    phone: '+91 98200 33445',
+  },
+  {
+    id: 'USR-0006',
+    name: 'Mr. Faizan Ali',
+    email: 'faizan.ali@saifeehospital.in',
+    role: UserRole.HOD,
+    department: 'General Stores',
+    designation: 'Head of Department',
+    phone: '+91 98200 55667',
+  },
+  {
+    id: 'USR-0007',
+    name: 'Mr. Yusuf Khan',
+    email: 'yusuf.khan@saifeehospital.in',
+    role: UserRole.HOD,
+    department: 'Pharmacy',
+    designation: 'Head of Department',
+    phone: '+91 98200 66778',
+  },
 ]
 
 export const roleLabels: Record<UserRole, string> = {

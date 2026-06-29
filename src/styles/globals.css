@@ -95,3 +95,13 @@
     text-wrap: balance;
   }
 }
+
+/* Keep autofilled login inputs on the dark glass card instead of the
+   browser's default white background. */
+.login-input:-webkit-autofill,
+.login-input:-webkit-autofill:hover,
+.login-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+  caret-color: #ffffff;
+  transition: background-color 9999s ease-in-out 0s;
+}

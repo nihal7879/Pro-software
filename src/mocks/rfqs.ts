@@ -6,7 +6,7 @@ export const rfqs: Rfq[] = [
     rfqNo: 'SH-RFQ-GEN-2026-014',
     date: '2026-06-21',
     store: 'General Store',
-    status: DocumentStatus.InProgress,
+    status: DocumentStatus.Completed,
     dueDate: '2026-06-28',
     vendorIds: ['VEN-0005', 'VEN-0006', 'VEN-0007'],
     createdBy: 'Kamruddin Patel',
@@ -51,9 +51,9 @@ export const rfqs: Rfq[] = [
     rfqNo: 'SH-RFQ-KIT-2026-021',
     date: '2026-06-23',
     store: 'Kitchen Store',
-    status: DocumentStatus.Open,
+    status: DocumentStatus.InProgress,
     dueDate: '2026-06-30',
-    vendorIds: ['VEN-0004'],
+    vendorIds: ['VEN-0004', 'VEN-0009'],
     createdBy: 'Kamruddin Patel',
     lines: [
       {
@@ -61,7 +61,10 @@ export const rfqs: Rfq[] = [
         itemName: 'Ghee Pure Amul Pouch 1 LTR',
         unit: 'pouch',
         quantity: 40,
-        quotes: [{ vendorId: 'VEN-0004', vendorName: 'Manoj Enterprises', rate: 590.86, responded: false }],
+        quotes: [
+          { vendorId: 'VEN-0004', vendorName: 'Manoj Enterprises', rate: 590.86, responded: true },
+          { vendorId: 'VEN-0009', vendorName: 'Sai Food Suppliers', rate: 0, responded: false },
+        ],
       },
     ],
   },

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -9,39 +10,86 @@ interface DropdownProps {
   className?: string
 }
 
+interface MenuPos {
+  top: number
+  left: number
+  origin: 'top' | 'bottom'
+}
+
+const MENU_WIDTH = 192 // 12rem
+
 export function Dropdown({ trigger, children, align = 'end', className }: DropdownProps) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState<MenuPos>({ top: 0, left: 0, origin: 'top' })
+
+  // Position the portalled menu against the trigger, flipping up near the bottom.
+  const place = () => {
+    const el = triggerRef.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    const menuH = menuRef.current?.offsetHeight ?? 0
+    const spaceBelow = window.innerHeight - r.bottom
+    const flip = menuH > 0 && spaceBelow < menuH + 12
+    const left = align === 'end' ? r.right - MENU_WIDTH : r.left
+    setPos({
+      top: flip ? r.top - menuH - 8 : r.bottom + 8,
+      left: Math.max(8, Math.min(left, window.innerWidth - MENU_WIDTH - 8)),
+      origin: flip ? 'bottom' : 'top',
+    })
+  }
+
+  useLayoutEffect(() => {
+    if (open) place()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   useEffect(() => {
+    if (!open) return
     const onClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      const t = e.target as Node
+      if (!triggerRef.current?.contains(t) && !menuRef.current?.contains(t)) setOpen(false)
     }
+    const onScroll = () => place()
     document.addEventListener('mousedown', onClick)
-    return () => document.removeEventListener('mousedown', onClick)
-  }, [])
+    window.addEventListener('scroll', onScroll, true)
+    window.addEventListener('resize', onScroll)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      window.removeEventListener('scroll', onScroll, true)
+      window.removeEventListener('resize', onScroll)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   return (
-    <div ref={ref} className="relative">
-      <div onClick={() => setOpen((v) => !v)}>{trigger}</div>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.97 }}
-            transition={{ duration: 0.15 }}
-            className={cn(
-              'absolute z-50 mt-2 min-w-[12rem] overflow-hidden rounded-xl border border-border bg-card p-1.5 shadow-popover',
-              align === 'end' ? 'right-0' : 'left-0',
-              className,
-            )}
-          >
-            {children(() => setOpen(false))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    <>
+      <div ref={triggerRef} className="inline-flex" onClick={() => setOpen((v) => !v)}>
+        {trigger}
+      </div>
+      {createPortal(
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              ref={menuRef}
+              initial={{ opacity: 0, y: -6, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.97 }}
+              transition={{ duration: 0.15 }}
+              style={{ position: 'fixed', top: pos.top, left: pos.left, transformOrigin: pos.origin }}
+              className={cn(
+                'z-[60] min-w-[12rem] overflow-hidden rounded-xl border border-border bg-card p-1.5 shadow-popover',
+                className,
+              )}
+            >
+              {children(() => setOpen(false))}
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
+    </>
   )
 }
 

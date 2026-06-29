@@ -1,9 +1,14 @@
 import { useMaterialRequests } from '@/hooks/useProcurement'
 import { formatCurrency, formatDate } from '@/lib/format'
+import { useMaterialRequestStore } from '@/store/materialRequest.store'
+import { useAuthStore } from '@/store/auth.store'
+import { ApprovalStatus } from '@/types'
 import { ApprovalQueue, type ApprovalRecord } from './ApprovalQueue'
 
 export default function MaterialRequestApproval() {
   const { data, isLoading } = useMaterialRequests()
+  const decide = useMaterialRequestStore((s) => s.decide)
+  const approverName = useAuthStore((s) => s.currentUser?.name ?? 'Department HOD')
 
   const records: ApprovalRecord[] = (data ?? []).map((m) => ({
     id: m.id,
@@ -46,6 +51,9 @@ export default function MaterialRequestApproval() {
       isLoading={isLoading}
       referenceLabel="MR No"
       primaryLabel="Department"
+      openStatuses={[ApprovalStatus.Pending]}
+      onApprove={(id, remark) => decide(id, 'approve', approverName, remark)}
+      onReject={(id, remark) => decide(id, 'reject', approverName, remark)}
     />
   )
 }

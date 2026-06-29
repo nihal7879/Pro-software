@@ -2,7 +2,16 @@ import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from '@/layouts/AppLayout'
 import { PageLoader } from '@/components/common/Loader'
+import { ProtectedRoute } from './ProtectedRoute'
+import { defaultRouteForRole } from './access'
+import { useAuthStore } from '@/store/auth.store'
 import { paths } from './paths'
+
+/** Sends an authenticated user to their role's dashboard, else to login. */
+function RoleHome() {
+  const { isAuthenticated, role } = useAuthStore()
+  return <Navigate to={isAuthenticated && role ? defaultRouteForRole(role) : paths.login} replace />
+}
 
 const lazyPage = (factory: () => Promise<{ default: React.ComponentType }>) => lazy(factory)
 
@@ -49,13 +58,16 @@ const AuditLog = lazyPage(() => import('@/features/analytics/AuditLog'))
 const Notifications = lazyPage(() => import('@/pages/Notifications'))
 const Profile = lazyPage(() => import('@/pages/Profile'))
 const NotFound = lazyPage(() => import('@/pages/NotFound'))
+const Login = lazyPage(() => import('@/pages/Login'))
 
 export function AppRouter() {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        <Route element={<AppLayout />}>
-          <Route index element={<Navigate to={paths.dashboardPurchase} replace />} />
+        <Route path={paths.login} element={<Login />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppLayout />}>
+            <Route index element={<RoleHome />} />
 
           <Route path={paths.dashboardPurchase} element={<DashboardPurchase />} />
           <Route path={paths.dashboardHod} element={<DashboardHod />} />
@@ -96,8 +108,9 @@ export function AppRouter() {
           <Route path={paths.procurementKpi} element={<ProcurementKpi />} />
           <Route path={paths.auditLog} element={<AuditLog />} />
 
-          <Route path={paths.notifications} element={<Notifications />} />
-          <Route path={paths.profile} element={<Profile />} />
+            <Route path={paths.notifications} element={<Notifications />} />
+            <Route path={paths.profile} element={<Profile />} />
+          </Route>
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

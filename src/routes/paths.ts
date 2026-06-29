@@ -1,6 +1,7 @@
 /** Centralised route path constants. */
 export const paths = {
   root: '/',
+  login: '/login',
   dashboardPurchase: '/dashboard/purchase',
   dashboardHod: '/dashboard/hod',
   dashboardCeo: '/dashboard/ceo',

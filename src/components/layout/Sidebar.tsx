@@ -4,7 +4,20 @@ import { motion } from 'framer-motion'
 import { ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { navigation } from '@/routes/navigation'
 import { useUiStore } from '@/store/ui.store'
+import { useAuthStore } from '@/store/auth.store'
 import { cn } from '@/lib/utils'
+import type { UserRole } from '@/types'
+
+/** Sidebar sections with items the current role may access. */
+function useVisibleNavigation() {
+  const role = useAuthStore((s) => s.role)
+  return navigation
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => role && item.roles.includes(role as UserRole)),
+    }))
+    .filter((section) => section.items.length > 0)
+}
 
 function Logo({ collapsed }: { collapsed: boolean }) {
   return (
@@ -22,14 +35,15 @@ function Logo({ collapsed }: { collapsed: boolean }) {
   )
 }
 
-function SidebarContent({ collapsed }: { collapsed: boolean }) {
+function SidebarContent({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
+  const sections = useVisibleNavigation()
   const [open, setOpen] = useState<Record<string, boolean>>(
     () => Object.fromEntries(navigation.map((s) => [s.title, true])),
   )
 
   return (
     <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-3">
-      {navigation.map((section) => {
+      {sections.map((section) => {
         const SectionIcon = section.icon
         const expanded = open[section.title]
         return (
@@ -57,6 +71,7 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
                     <NavLink
                       key={item.to}
                       to={item.to}
+                      onClick={onNavigate}
                       title={collapsed ? item.label : undefined}
                       className={({ isActive }) =>
                         cn(
@@ -108,10 +123,11 @@ export function Sidebar() {
 
 /** Sidebar rendered inside the mobile drawer (always expanded). */
 export function MobileSidebarContent() {
+  const setMobileSidebar = useUiStore((s) => s.setMobileSidebar)
   return (
     <div className="flex h-full flex-col bg-sidebar">
       <Logo collapsed={false} />
-      <SidebarContent collapsed={false} />
+      <SidebarContent collapsed={false} onNavigate={() => setMobileSidebar(false)} />
     </div>
   )
 }
