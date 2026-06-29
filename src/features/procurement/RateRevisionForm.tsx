@@ -15,10 +15,13 @@ import { chargeableOptions, departmentOptions } from '@/lib/options'
 import { rateRevisionSchema, type RateRevisionFormValues } from '@/lib/validations'
 import { paths } from '@/routes/paths'
 import { toast } from '@/store/toast.store'
-import { ChargeableFlag } from '@/types'
+import { useRateRevisionStore } from '@/store/rateRevision.store'
+import { departments } from '@/mocks/departments'
+import { ApprovalStatus, ChargeableFlag, UserRole, type RateRevision } from '@/types'
 
 export default function RateRevisionForm() {
   const navigate = useNavigate()
+  const addRateRevision = useRateRevisionStore((s) => s.add)
   const {
     register,
     handleSubmit,
@@ -45,8 +48,39 @@ export default function RateRevisionForm() {
   const mrpDiff = existingMrp ? ((revisedMrp - existingMrp) / existingMrp) * 100 : 0
 
   const onSubmit = async (values: RateRevisionFormValues) => {
-    await new Promise((r) => setTimeout(r, 600))
-    toast.success('Rate revision submitted', `${values.itemName} sent for approval.`)
+    await new Promise((r) => setTimeout(r, 400))
+    const hodName = departments.find((d) => d.name === values.userDepartment)?.hodName ?? 'Department HOD'
+    const record: RateRevision = {
+      id: `RR-${Date.now()}`,
+      formNo: `SH-RR-NEW-${Date.now().toString().slice(-4)}`,
+      date: values.date,
+      supplier: values.supplier,
+      brandName: values.brandName,
+      userDepartment: values.userDepartment,
+      chargeable: values.chargeable,
+      reason: values.reason,
+      remark: values.remark,
+      preparedBy: 'Purchase',
+      preparedDepartment: 'Purchase Department',
+      itemCode: values.itemCode,
+      itemName: values.itemName,
+      existingRate: values.existingRate,
+      quotedRate: values.quotedRate,
+      revisedCostPrice: values.quotedRate,
+      differenceRatePercent: Number(rateDiff.toFixed(2)),
+      existingMrp: values.existingMrp,
+      revisedMrp: values.revisedMrp,
+      differenceMrpPercent: Number(mrpDiff.toFixed(2)),
+      lastRateRevisedOn: values.date,
+      annualConsumption: values.annualConsumption,
+      status: ApprovalStatus.Pending,
+      approvals: [
+        { role: UserRole.HOD, approverName: hodName, status: ApprovalStatus.Pending },
+        { role: UserRole.CEO, approverName: 'Dr. Huzaifa Shehabi', status: ApprovalStatus.Pending },
+      ],
+    }
+    addRateRevision(record)
+    toast.success('Rate revision submitted', `${record.formNo} sent for approval.`)
     navigate(paths.rateRevisionList)
   }
 

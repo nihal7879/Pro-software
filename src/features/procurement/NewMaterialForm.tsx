@@ -16,10 +16,13 @@ import { chargeableOptions, departmentOptions, unitOptions } from '@/lib/options
 import { newMaterialSchema, type NewMaterialFormValues } from '@/lib/validations'
 import { paths } from '@/routes/paths'
 import { toast } from '@/store/toast.store'
-import { ChargeableFlag } from '@/types'
+import { useNewMaterialStore } from '@/store/newMaterial.store'
+import { departments } from '@/mocks/departments'
+import { ApprovalStatus, ChargeableFlag, UserRole, type NewMaterialRequest } from '@/types'
 
 export default function NewMaterialForm() {
   const navigate = useNavigate()
+  const addNewMaterial = useNewMaterialStore((s) => s.add)
   const {
     register,
     control,
@@ -36,8 +39,39 @@ export default function NewMaterialForm() {
   const { fields, append, remove } = useFieldArray({ control, name: 'lines' })
 
   const onSubmit = async (values: NewMaterialFormValues) => {
-    await new Promise((r) => setTimeout(r, 600))
-    toast.success('New Material form submitted', `Sent for HOD review (${values.lines.length} item(s)).`)
+    await new Promise((r) => setTimeout(r, 400))
+    const hodName = departments.find((d) => d.name === values.department)?.hodName ?? 'Department HOD'
+    const record: NewMaterialRequest = {
+      id: `NM-${Date.now()}`,
+      formNo: `SH-NM-NEW-${Date.now().toString().slice(-4)}`,
+      refNo: `REF-${Date.now().toString().slice(-5)}`,
+      date: values.date,
+      supplierName: values.supplierName,
+      supplierAddress: values.supplierAddress,
+      department: values.department,
+      requestedBy: values.requestedBy,
+      leadTime: values.leadTime,
+      chargeable: values.chargeable,
+      remark: values.remark,
+      lines: values.lines.map((l) => ({
+        itemName: l.itemName,
+        unit: l.unit,
+        packSize: l.packSize,
+        brand: l.brand,
+        quantity: l.quantity,
+        quoteRate: l.quoteRate,
+        negotiatedRate: l.negotiatedRate,
+        mrp: l.mrp,
+        gstPercent: l.gstPercent,
+      })),
+      status: ApprovalStatus.Pending,
+      approvals: [
+        { role: UserRole.HOD, approverName: hodName, status: ApprovalStatus.Pending },
+        { role: UserRole.CEO, approverName: 'Dr. Huzaifa Shehabi', status: ApprovalStatus.Pending },
+      ],
+    }
+    addNewMaterial(record)
+    toast.success('New Material form submitted', `${record.formNo} sent for HOD review.`)
     navigate(paths.newMaterialList)
   }
 

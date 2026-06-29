@@ -87,9 +87,9 @@ export function Navbar() {
             <>
               <div className="flex items-center gap-3 px-3 py-2">
                 <Avatar name={currentUser.name} />
-                <div className="leading-tight">
-                  <p className="text-sm font-semibold">{currentUser.name}</p>
-                  <p className="text-xs text-muted-foreground">{currentUser.email}</p>
+                <div className="min-w-0 leading-tight">
+                  <p className="truncate text-sm font-semibold">{currentUser.name}</p>
+                  <p className="max-w-[12rem] truncate text-xs text-muted-foreground">{currentUser.email}</p>
                 </div>
               </div>
               <DropdownSeparator />

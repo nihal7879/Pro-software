@@ -11,6 +11,8 @@ import {
 import { useRfqStore } from '@/store/rfq.store'
 import { useComparisonStore } from '@/store/comparison.store'
 import { usePoStore } from '@/store/po.store'
+import { useNewMaterialStore } from '@/store/newMaterial.store'
+import { useRateRevisionStore } from '@/store/rateRevision.store'
 import { queryKeys } from './queryKeys'
 import type { UserRole } from '@/types'
 
@@ -74,25 +76,23 @@ export const useComparison = (id: string) => {
 
 export const useNewMaterials = () => {
   const scope = useDepartmentScope()
-  return useQuery({
-    queryKey: queryKeys.newMaterials,
-    queryFn: procurementService.getNewMaterials,
-    select: (rows) => scope(rows, (r) => r.department),
-  })
+  const items = useNewMaterialStore((s) => s.items)
+  return { data: scope(items, (r) => r.department), isLoading: false }
 }
-export const useNewMaterial = (id: string) =>
-  useQuery({ queryKey: queryKeys.newMaterial(id), queryFn: () => procurementService.getNewMaterial(id) })
+export const useNewMaterial = (id: string) => {
+  const items = useNewMaterialStore((s) => s.items)
+  return { data: items.find((n) => n.id === id), isLoading: false }
+}
 
 export const useRateRevisions = () => {
   const scope = useDepartmentScope()
-  return useQuery({
-    queryKey: queryKeys.rateRevisions,
-    queryFn: procurementService.getRateRevisions,
-    select: (rows) => scope(rows, (r) => r.userDepartment),
-  })
+  const items = useRateRevisionStore((s) => s.items)
+  return { data: scope(items, (r) => r.userDepartment), isLoading: false }
 }
-export const useRateRevision = (id: string) =>
-  useQuery({ queryKey: queryKeys.rateRevision(id), queryFn: () => procurementService.getRateRevision(id) })
+export const useRateRevision = (id: string) => {
+  const items = useRateRevisionStore((s) => s.items)
+  return { data: items.find((r) => r.id === id), isLoading: false }
+}
 
 export const usePurchaseOrders = () => {
   const scope = useDepartmentScope()

@@ -39,10 +39,35 @@ const editFields: FieldConfig[] = [
 export default function VendorDirectory() {
   const navigate = useNavigate()
   const { data, isLoading } = useVendors()
-  const { update, remove } = useVendorStore()
+  const { add, update, remove } = useVendorStore()
   const [status, setStatus] = useState('all')
   const [edit, setEdit] = useState<Vendor | null>(null)
   const [del, setDel] = useState<Vendor | null>(null)
+
+  const addVendor = () => {
+    const vendor: Vendor = {
+      id: `VEN-${Date.now()}`,
+      code: `VEN-${Date.now().toString().slice(-4)}`,
+      name: 'New Vendor',
+      contactPerson: '',
+      email: '',
+      phone: '',
+      address: '',
+      city: '',
+      gstin: '',
+      category: [],
+      status: VendorStatus.Pending,
+      rating: 0,
+      onTimeDeliveryRate: 0,
+      totalOrders: 0,
+      totalSpend: 0,
+      paymentTerms: 'Net 30',
+      leadTimeDays: 7,
+      createdAt: new Date().toISOString().slice(0, 10),
+    }
+    add(vendor)
+    setEdit(vendor)
+  }
 
   const filtered = useMemo(
     () => (data ?? []).filter((v) => status === 'all' || v.status === status),
@@ -121,7 +146,7 @@ export default function VendorDirectory() {
         description="Manage suppliers, performance and compliance."
         breadcrumbs={[{ label: 'Vendors' }, { label: 'Directory' }]}
         actions={
-          <Button onClick={() => toast.success('New vendor', 'Vendor form would open')}>
+          <Button onClick={addVendor}>
             <Plus />
             Add Vendor
           </Button>

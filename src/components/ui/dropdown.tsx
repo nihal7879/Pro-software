@@ -30,12 +30,13 @@ export function Dropdown({ trigger, children, align = 'end', className }: Dropdo
     if (!el) return
     const r = el.getBoundingClientRect()
     const menuH = menuRef.current?.offsetHeight ?? 0
+    const menuW = menuRef.current?.offsetWidth ?? MENU_WIDTH
     const spaceBelow = window.innerHeight - r.bottom
     const flip = menuH > 0 && spaceBelow < menuH + 12
-    const left = align === 'end' ? r.right - MENU_WIDTH : r.left
+    const left = align === 'end' ? r.right - menuW : r.left
     setPos({
       top: flip ? r.top - menuH - 8 : r.bottom + 8,
-      left: Math.max(8, Math.min(left, window.innerWidth - MENU_WIDTH - 8)),
+      left: Math.max(8, Math.min(left, window.innerWidth - menuW - 8)),
       origin: flip ? 'bottom' : 'top',
     })
   }
@@ -79,7 +80,7 @@ export function Dropdown({ trigger, children, align = 'end', className }: Dropdo
               transition={{ duration: 0.15 }}
               style={{ position: 'fixed', top: pos.top, left: pos.left, transformOrigin: pos.origin }}
               className={cn(
-                'z-[60] min-w-[12rem] overflow-hidden rounded-xl border border-border bg-card p-1.5 shadow-popover',
+                'z-[60] min-w-[12rem] max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl border border-border bg-card p-1.5 shadow-popover',
                 className,
               )}
             >

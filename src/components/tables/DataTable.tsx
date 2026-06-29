@@ -85,6 +85,23 @@ export function DataTable<TData>({
 
   const selectedCount = Object.keys(rowSelection).length
 
+  const exportCsv = () => {
+    const cols = table.getAllLeafColumns().filter((c) => c.id !== 'select' && c.id !== 'actions' && c.getIsVisible())
+    const header = cols.map((c) => (typeof c.columnDef.header === 'string' ? c.columnDef.header : c.id))
+    const escape = (v: unknown) => {
+      const s = v == null ? '' : String(v)
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+    }
+    const rows = table.getFilteredRowModel().rows.map((r) => cols.map((c) => escape(r.getValue(c.id))).join(','))
+    const csv = [header.map(escape).join(','), ...rows].join('\n')
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `export-${table.getFilteredRowModel().rows.length}-rows.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -100,7 +117,7 @@ export function DataTable<TData>({
           )}
           {toolbar}
           {enableExport && (
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={exportCsv}>
               <Download />
               Export
             </Button>
